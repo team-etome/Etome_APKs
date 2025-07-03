@@ -1,0 +1,96 @@
+name: Upload New APKs to S3 and Update apps.json
+
+on:
+  push:
+    paths:
+      - '*.apk'
+      - 'apk_mapping.json'
+      - 'changelog.json'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Exit if only deleted files are in the commit
+      run: |
+        BEFORE_SHA=${{ github.event.before }}
+        CURRENT_SHA=${{ github.sha }}
+        deleted_files=$(git diff --diff-filter=D --name-only "$BEFORE_SHA" "$CURRENT_SHA" | grep -E '\.apk$|apk_mapping\.json|changelog\.json' || true)
+        all_changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" | grep -E '\.apk$|apk_mapping\.json|changelog\.json' || true)
+        if [ "$deleted_files" = "$all_changed_files" ] && [ -n "$deleted_files" ]; then
+          echo "All matching files were deleted. Skipping upload."
+          exit 0
+        fi
+
+    - name: Create temp folders
+      run: mkdir -p meta_data
+
+    - name: Download or create apps.json
+      run: |
+        aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json meta_data/apps.json || echo "[]" > meta_data/apps.json
+
+    - name: Upload new APKs and update apps.json
+      run: |
+        changed_apks=$(git diff --diff-filter=AM --name-only ${{ github.event.before }} ${{ github.sha }} -- '*.apk')
+
+        for apk in $changed_apks; do
+          [ -f "$apk" ] || continue
+
+          base_name=$(basename "$apk" .apk)
+          version=$(date +%Y%m%d%H%M%S)
+          new_apk_name="${base_name}-${version}.apk"
+          apk_s3_key="apks/${new_apk_name}"
+          apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
+
+          # Check if there's an old entry for this app
+          old_apk_key=$(jq -r --arg base "$base_name" '
+            .[] | select(.name | startswith($base + "_v")) | .apk_url
+          ' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
+
+          # Delete old APK from S3 if exists
+          if [ -n "$old_apk_key" ]; then
+            echo "Deleting old APK from S3: $old_apk_key"
+            aws s3 rm "s3://${{ secrets.S3_BUCKET_NAME }}/$old_apk_key" || true
+          fi
+
+          # Upload new APK
+          echo "Uploading new APK to S3: $apk_s3_key"
+          aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/$apk_s3_key"
+
+          # Get changelog
+          changelog=$(jq -r --arg name "$base_name" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
+
+          # Remove old entry from apps.json
+          updated_apps=$(jq --arg base "$base_name" '
+            map(select(.name | startswith($base + "_v") | not))
+          ' meta_data/apps.json)
+
+          # Create new entry
+          new_entry=$(jq -n \
+            --arg name "${base_name}_v${version}" \
+            --arg version "$version" \
+            --arg apk_url "$apk_url" \
+            --arg changelog "$changelog" \
+            '{name: $name, version: $version, apk_url: $apk_url, changelog: $changelog}')
+
+          # Add new entry to apps.json
+          echo "$updated_apps" | jq --argjson new "$new_entry" '. + [$new]' > meta_data/apps.json
+        done
+
+        echo "Final apps.json:"
+        cat meta_data/apps.json
+
+        aws s3 cp meta_data/apps.json s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json
