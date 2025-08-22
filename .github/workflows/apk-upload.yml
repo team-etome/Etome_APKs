@@ -84,7 +84,7 @@ jobs:
           if [ -n "$icon_path" ] && [ "$icon_path" != "null" ]; then
             if [ -f "$icon_path" ]; then
               echo "Uploading icon $icon_path to S3"
-              aws s3 cp "$icon_path" "s3://${{ secrets.S3_BUCKET_NAME }}/$icon_path" --acl public-read
+              aws s3 cp "$icon_path" "s3://${{ secrets.S3_BUCKET_NAME }}/$icon_path" 
               icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
             else
               echo "WARNING: Icon file $icon_path not found in repo"
