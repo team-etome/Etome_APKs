@@ -13,7 +13,7 @@
   },
   "app3": {
     "description": "App3 - Stability improvements",
-    "icon": "null" 
+    "icon": "null"
   },
   "com.etome.academia-0.4.1": {
     "description": "Etome Academia 0.4.1 - Learning platform",
@@ -33,7 +33,7 @@
   },
   "com.etome.etomeandroid_academia-0.4.1": {
     "description": "Etome Android Academia 0.4.1",
-    "icon": "icons/com.etome.academia.png"
+    "icon": "icons/com.etome.etomeandroid_academia.png"
   },
   "com.etome.etomeloka-1.0.2": {
     "description": "Etome Loka 1.0.2 - Community platform",
