@@ -58,6 +58,9 @@ jobs:
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
+          # Strip dynamic version/timestamp from base_name to match metadata.json keys
+          meta_key=$(echo "$base_name" | sed -E 's/-[0-9]{8,}$//')
+
           # Delete old APK if exists
           old_apk_key=$(jq -r --arg base "$base_name" '.[] | select(.name | startswith($base + "_v")) | .apk_url' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
           if [ -n "$old_apk_key" ]; then
@@ -72,26 +75,22 @@ jobs:
           # Get changelog
           changelog=$(jq -r --arg name "$base_name" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
 
-          # --- Flexible lookup for description & icon ---
-          description=$(jq -r --arg apk "$base_name" '
-            to_entries[]
-            | select(.key | contains($apk))
-            | .value.description // "No description"
-          ' "$metadata_file")
-
-          icon_path=$(jq -r --arg apk "$base_name" '
-            to_entries[]
-            | select(.key | contains($apk))
-            | .value.icon // ""
-          ' "$metadata_file")
+          # Get description & icon from metadata.json using correct key
+          description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file")
+          icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // ""' "$metadata_file")
 
           # Upload icon to S3 if defined
-          if [ -n "$icon_path" ] && [ -f "$icon_path" ]; then
+          if [ -n "$icon_path" ] && [ "$icon_path" != "null" ]; then
+            if [ -f "$icon_path" ]; then
               echo "Uploading icon $icon_path to S3"
               aws s3 cp "$icon_path" "s3://${{ secrets.S3_BUCKET_NAME }}/$icon_path" --acl public-read
               icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
-          else
+            else
+              echo "WARNING: Icon file $icon_path not found in repo"
               icon_url=""
+            fi
+          else
+            icon_url=""
           fi
 
           # Remove old entry from apps.json
