@@ -7,6 +7,7 @@ on:
       - 'apk_mapping.json'
       - 'changelog.json'
       - 'metadata.json'
+      - 'icons/**'
 
 jobs:
   upload:
@@ -75,11 +76,16 @@ jobs:
           description=$(jq -r --arg name "$base_name" '.[$name].description // "No description."' "$metadata_file")
           icon_path=$(jq -r --arg name "$base_name" '.[$name].icon // ""' "$metadata_file")
 
-          # Upload icon to S3 if it exists
-          if [ -n "$icon_path" ] && [ -f "$icon_path" ]; then
-            echo "Uploading icon $icon_path to S3"
-            aws s3 cp "$icon_path" "s3://${{ secrets.S3_BUCKET_NAME }}/$icon_path"
-            icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
+          # Upload icon to S3 if defined
+          if [ -n "$icon_path" ]; then
+            if [ -f "$icon_path" ]; then
+              echo "Uploading icon $icon_path to S3"
+              aws s3 cp "$icon_path" "s3://${{ secrets.S3_BUCKET_NAME }}/$icon_path" --acl public-read
+              icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
+            else
+              echo "WARNING: Icon file $icon_path not found in repo"
+              icon_url=""
+            fi
           else
             icon_url=""
           fi
