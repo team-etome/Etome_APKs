@@ -14,5 +14,77 @@
   "app3": {
     "description": "App3 - Stability improvements",
     "icon": ""
+  },
+  "com.etome.academia-0.4.1": {
+    "description": "Etome Academia 0.4.1 - Learning platform",
+    "icon": "icons/com.etome.academia.png"
+  },
+  "com.etome.diary-0.3.0": {
+    "description": "Etome Diary 0.3.0 - Personal diary app",
+    "icon": "icons/com.etome.diary.png"
+  },
+  "com.etome.eeka_launcher-1.2.7": {
+    "description": "Eeka Launcher 1.2.7 - Custom launcher",
+    "icon": "icons/com.etome.eeka_launcher.png"
+  },
+  "com.etome.etome_examination_mcq_omr-0.1.0": {
+    "description": "Etome Examination MCQ OMR 0.1.0",
+    "icon": "icons/com.etome.etome_examination_mcq_omr.png"
+  },
+  "com.etome.etomeandroid_academia-0.4.1": {
+    "description": "Etome Android Academia 0.4.1",
+    "icon": "icons/com.etome.academia.png"
+  },
+  "com.etome.etomeloka-1.0.2": {
+    "description": "Etome Loka 1.0.2 - Community platform",
+    "icon": "icons/com.etome.etomeloka.png"
+  },
+  "com.etome.etometodo-1.0.2": {
+    "description": "Etome Todo 1.0.2 - Task manager",
+    "icon": "icons/com.etome.etometodo.png"
+  },
+  "com.etome.evaluation-1.4.3": {
+    "description": "Etome Evaluation 1.4.3",
+    "icon": "icons/com.etome.evaluation.png"
+  },
+  "com.etome.examination-1.7.2": {
+    "description": "Etome Examination 1.7.2",
+    "icon": "icons/com.etome.examination.png"
+  },
+  "com.etome.eyora-0.1.5": {
+    "description": "Eyora 0.1.5",
+    "icon": "icons/com.etome.eyora.png"
+  },
+  "com.etome.invigilation-1.0.5": {
+    "description": "Etome Invigilation 1.0.5",
+    "icon": "icons/com.etome.invigilation.png"
+  },
+  "com.etome.loka-1.4.0": {
+    "description": "Etome Loka 1.4.0",
+    "icon": "icons/com.etome.loka.png"
+  },
+  "com.etome.nirmana-1.6.1": {
+    "description": "Etome Nirmana 1.6.1",
+    "icon": "icons/com.etome.nirmana.png"
+  },
+  "com.etome.panasonic_deloitte-0.1.2": {
+    "description": "Panasonic Deloitte 0.1.2",
+    "icon": "icons/com.etome.panasonic_deloitte.png"
+  },
+  "com.etomi.etomediary-1.0.4": {
+    "description": "Etome Diary (Alt) 1.0.4",
+    "icon": "icons/com.etomi.etomediary.png"
+  },
+  "com.leywin.rsbr-1.0.0": {
+    "description": "Leywin RSBR 1.0.0",
+    "icon": "icons/com.leywin.rsbr.png"
+  },
+  "com.leywin.storeley-2.2.3": {
+    "description": "Storeley 2.2.3",
+    "icon": "icons/com.leywin.storeley.png"
+  },
+  "com.leywin.tester.etome_store_tester-0.2.0": {
+    "description": "Etome Store Tester 0.2.0",
+    "icon": "icons/com.leywin.tester.etome_store_tester.png"
   }
 }
