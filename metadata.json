@@ -1,0 +1,18 @@
+{
+  "AuroraStore-4.4.2": {
+    "description": "AuroraStore 4.4.2 - Improved performance and bug fixes",
+    "icon": "icons/icon.jpg"
+  },
+  "app1": {
+    "description": "App1 - Basic features",
+    "icon": ""
+  },
+  "app2": {
+    "description": "App2 - Latest updates with new features",
+    "icon": ""
+  },
+  "app3": {
+    "description": "App3 - Stability improvements",
+    "icon": ""
+  }
+}
