@@ -16,9 +16,10 @@
     "icon": "null"
   },
   "com.etome.academia-0.4.1": {
-    "description": "com.etome.academia-0.4.1 - Learning platform",
-    "icon": "icons/com.etome.academia.png"
-  },
+  "description": "Learning platform",
+  "icon": "icons/com.etome.academia.png"
+},
+
   "com.etome.diary-0.3.0": {
     "description": "Etome Diary 0.3.0 - Personal diary app",
     "icon": "icons/com.etome.diary.png"
