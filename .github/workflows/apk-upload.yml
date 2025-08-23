@@ -64,15 +64,17 @@ jobs:
 
         for apk in $changed_apks; do
           [ -f "$apk" ] || continue
-
           base_name=$(basename "$apk" .apk)
-          version=$(date +%Y%m%d%H%M%S)
-          new_apk_name="${base_name}-${version}.apk"
+
+          # Generate incremental version (v1, v2, v3...)
+          existing_count=$(jq '[.[] | select(.name | startswith("'"$base_name"'"))] | length' meta_data/apps.json)
+          version=$((existing_count + 1))
+          new_apk_name="${base_name}_v${version}.apk"
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          # Strip GitHub action version suffix to match metadata.json key
-         meta_key=$(echo "$base_name" | sed -E 's/_v[0-9]+$//')
+          # Metadata key matches base_name
+          meta_key="$base_name"
 
           # Delete old APK if exists
           old_apk_key=$(jq -r --arg base "$base_name" '.[] | select(.name | startswith($base + "_v")) | .apk_url' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
@@ -105,7 +107,7 @@ jobs:
           # Create new entry
           new_entry=$(jq -n \
             --arg name "${base_name}_v${version}" \
-            --arg version "$version" \
+            --arg version "v${version}" \
             --arg apk_url "$apk_url" \
             --arg changelog "$changelog" \
             --arg icon_url "$icon_url" \
