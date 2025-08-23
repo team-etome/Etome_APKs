@@ -1,74 +1,82 @@
 {
-  "com.etome.academia-0.4.1": {
+  "com.etome.academia-0.4.1_v20250822071325": {
     "description": "Learning platform",
     "icon": "icons/com.etome.academia.png"
   },
-  "com.etome.diary-0.3.0": {
+  "com.etome.diary-0.3.0_v20250822071326": {
     "description": "Etome Diary 0.3.0 - Personal diary app",
     "icon": "icons/com.etome.diary.png"
   },
-  "com.etome.eeka_launcher-1.2.7": {
+  "com.etome.eeka_launcher-1.2.7_v20250822071327": {
     "description": "Eeka Launcher 1.2.7 - Custom launcher",
     "icon": "icons/com.etome.eeka_launcher.png"
   },
-  "com.etome.etome_examination_mcq_omr-0.1.0": {
+  "com.etome.etome_examination_mcq_omr-0.1.0_v20250822071328": {
     "description": "Etome Examination MCQ OMR 0.1.0",
     "icon": "icons/com.etome.etome_examination_mcq_omr.png"
   },
-  "com.etome.etomeloka-1.0.2": {
+  "com.etome.etomeandroid_academia-0.4.1_v20250822071329": {
+    "description": "Etome Android Academia 0.4.1",
+    "icon": "icons/com.etome.academia.png"
+  },
+  "com.etome.etomeloka-1.0.2_v20250822071330": {
     "description": "Etome Loka 1.0.2 - Community platform",
     "icon": "icons/com.etome.etomeloka.png"
   },
-  "com.etome.etometodo-1.0.2": {
+  "com.etome.etometodo-1.0.2_v20250822071331": {
     "description": "Etome Todo 1.0.2 - Task manager",
     "icon": "icons/com.etome.etometodo.png"
   },
-  "com.etome.evaluation-1.4.3": {
+  "com.etome.evaluation-1.4.3_v20250822071332": {
     "description": "Etome Evaluation 1.4.3",
     "icon": "icons/com.etome.evaluation.png"
   },
-  "com.etome.examination-1.7.2": {
+  "com.etome.examination-1.7.2_v20250822071333": {
     "description": "Etome Examination 1.7.2",
     "icon": "icons/com.etome.examination.png"
   },
-  "com.etome.eyora-0.1.5": {
+  "com.etome.eyora-0.1.5_v20250822071334": {
     "description": "Eyora 0.1.5",
     "icon": "icons/com.etome.eyora.png"
   },
-  "com.etome.invigilation-1.0.5": {
+  "com.etome.invigilation-1.0.5_v20250822071335": {
     "description": "Etome Invigilation 1.0.5",
     "icon": "icons/com.etome.invigilation.png"
   },
-  "com.etome.loka-1.4.0": {
+  "com.etome.loka-1.4.0_v20250822071336": {
     "description": "Etome Loka 1.4.0",
     "icon": "icons/com.etome.loka.png"
   },
-  "com.etome.nirmana-1.6.1": {
+  "com.etome.nirmana-1.6.1_v20250822071337": {
     "description": "Etome Nirmana 1.6.1",
     "icon": "icons/com.etome.nirmana.png"
   },
-  "com.etome.panasonic_deloitte-0.1.2": {
+  "com.etome.panasonic_deloitte-0.1.2_v20250822071338": {
     "description": "Panasonic Deloitte 0.1.2",
     "icon": "icons/com.etome.care_demo.png"
   },
-  "com.etomi.etomediary-1.0.4": {
+  "com.etomi.etomediary-1.0.4_v20250822071340": {
     "description": "Etome Diary (Alt) 1.0.4",
     "icon": "icons/com.etomi.etomediary.png"
   },
-  "com.leywin.rsbr-1.0.0": {
+  "com.leywin.rsbr-1.0.0_v20250822071341": {
     "description": "Leywin RSBR 1.0.0",
     "icon": "icons/com.leywin.rsbr.png"
   },
-  "com.leywin.storeley-2.2.3": {
+  "com.leywin.storeley-2.2.3_v20250822071341": {
     "description": "Storeley 2.2.3",
     "icon": "icons/com.leywin.storeley.png"
   },
-  "com.leywin.tester.etome_store_tester-0.2.0": {
+  "com.leywin.tester.etome_store_tester-0.2.0_v20250822071342": {
     "description": "Etome Store Tester 0.2.0",
     "icon": "icons/com.leywin.tester.etome_store_tester.png"
+  },
+  "AuroraStore-4.4.2_v20250822110556": {
+    "description": "AuroraStore 4.4.2 - Improved performance and bug fixes",
+    "icon": "icons/icon.jpg"
+  },
+  "com.etome.academia-0.4.1_v20250822_v20250822120236": {
+    "description": "Learning platform",
+    "icon": "icons/com.etome.academia.png"
   }
 }
-
-
-
-
