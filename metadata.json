@@ -1,25 +1,8 @@
 {
-  "AuroraStore-4.4.2": {
-    "description": "AuroraStore 4.4.2 - Improved performance and bug fixes",
-    "icon": "icons/icon.jpg"
-  },
-  "app1": {
-    "description": "App1 - Basic features",
-    "icon": ""
-  },
-  "app2": {
-    "description": "App2 - Latest updates with new features",
-    "icon": ""
-  },
-  "app3": {
-    "description": "App3 - Stability improvements",
-    "icon": ""
-  },
   "com.etome.academia-0.4.1": {
-  "description": "Learning platform",
-  "icon": "icons/com.etome.academia.png"
-},
-
+    "description": "Learning platform",
+    "icon": "icons/com.etome.academia.png"
+  },
   "com.etome.diary-0.3.0": {
     "description": "Etome Diary 0.3.0 - Personal diary app",
     "icon": "icons/com.etome.diary.png"
@@ -31,10 +14,6 @@
   "com.etome.etome_examination_mcq_omr-0.1.0": {
     "description": "Etome Examination MCQ OMR 0.1.0",
     "icon": "icons/com.etome.etome_examination_mcq_omr.png"
-  },
-  "com.etome.etomeandroid_academia-0.4.1": {
-    "description": "Etome Android Academia 0.4.1",
-    "icon": "icons/com.etome.etomeandroid_academia.png"
   },
   "com.etome.etomeloka-1.0.2": {
     "description": "Etome Loka 1.0.2 - Community platform",
@@ -70,7 +49,7 @@
   },
   "com.etome.panasonic_deloitte-0.1.2": {
     "description": "Panasonic Deloitte 0.1.2",
-    "icon": "icons/com.etome.panasonic_deloitte.png"
+    "icon": "icons/com.etome.care_demo.png"
   },
   "com.etomi.etomediary-1.0.4": {
     "description": "Etome Diary (Alt) 1.0.4",
@@ -89,6 +68,3 @@
     "icon": "icons/com.leywin.tester.etome_store_tester.png"
   }
 }
-
-
-
