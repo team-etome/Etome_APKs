@@ -30,8 +30,8 @@ jobs:
       run: |
         BEFORE_SHA=${{ github.event.before }}
         CURRENT_SHA=${{ github.sha }}
-        deleted_files=$(git diff --diff-filter=D --name-only "$BEFORE_SHA" "$CURRENT_SHA" | grep -E '\.apk$|apk_mapping\.json|changelog\.json|metadata\.json' || true)
-        all_changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" | grep -E '\.apk$|apk_mapping\.json|changelog\.json|metadata\.json' || true)
+        deleted_files=$(git diff --diff-filter=D --name-only "$BEFORE_SHA" "$CURRENT_SHA" | grep -E '\.apk$|apk_mapping\.json|changelog\.json|metadata\.json|icons/' || true)
+        all_changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" | grep -E '\.apk$|apk_mapping\.json|changelog\.json|metadata\.json|icons/' || true)
         if [ "$deleted_files" = "$all_changed_files" ] && [ -n "$deleted_files" ]; then
           echo "All matching files were deleted. Skipping upload."
           exit 0
@@ -43,6 +43,15 @@ jobs:
     - name: Download or create apps.json
       run: |
         aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json meta_data/apps.json || echo "[]" > meta_data/apps.json
+
+    - name: Upload all icons to S3
+      run: |
+        if [ -d icons ]; then
+          echo "Uploading all icons to S3..."
+          aws s3 cp icons/ "s3://${{ secrets.S3_BUCKET_NAME }}/icons/" --recursive
+        else
+          echo "No icons folder found, skipping."
+        fi
 
     - name: Upload new APKs and update apps.json
       run: |
@@ -79,16 +88,9 @@ jobs:
           description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file")
           icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // ""' "$metadata_file")
 
-          # Upload icon to S3 if defined
+          # Set icon_url (icon already uploaded in bulk step above)
           if [ -n "$icon_path" ] && [ "$icon_path" != "null" ]; then
-            if [ -f "$icon_path" ]; then
-              echo "Uploading icon $icon_path to S3"
-              aws s3 cp "$icon_path" "s3://${{ secrets.S3_BUCKET_NAME }}/$icon_path" 
-              icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
-            else
-              echo "WARNING: Icon file $icon_path not found in repo"
-              icon_url=""
-            fi
+            icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
           else
             icon_url=""
           fi
