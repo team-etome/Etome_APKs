@@ -71,8 +71,8 @@ jobs:
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          # Match metadata.json key exactly
-          meta_key="$base_name"
+          # Strip GitHub action version suffix to match metadata.json key
+          meta_key=$(echo "$base_name" | sed 's/_v[0-9]\{8,14\}$//')
 
           # Delete old APK if exists
           old_apk_key=$(jq -r --arg base "$base_name" '.[] | select(.name | startswith($base + "_v")) | .apk_url' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
@@ -86,13 +86,13 @@ jobs:
           aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/$apk_s3_key"
 
           # Get changelog
-          changelog=$(jq -r --arg name "$base_name" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
+          changelog=$(jq -r --arg name "$meta_key" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
 
           # Get description & icon from metadata.json
           description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file")
           icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // ""' "$metadata_file")
 
-          # Set icon_url (icon already uploaded in bulk step above)
+          # Form icon URL if exists
           if [ -n "$icon_path" ] && [ "$icon_path" != "null" ]; then
             icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
           else
