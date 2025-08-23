@@ -44,6 +44,10 @@ jobs:
       run: |
         aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json meta_data/apps.json || echo "[]" > meta_data/apps.json
 
+    - name: Download metadata.json from S3
+      run: |
+        aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/meta/metadata.json metadata.json || echo "{}" > metadata.json
+
     - name: Upload all icons to S3
       run: |
         if [ -d icons ]; then
@@ -67,7 +71,7 @@ jobs:
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          # Match metadata.json key exactly (including version suffix if present)
+          # Match metadata.json key exactly
           meta_key="$base_name"
 
           # Delete old APK if exists
