@@ -67,8 +67,8 @@ jobs:
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          # Strip timestamp/version to match metadata.json key
-          meta_key=$(echo "$base_name" | sed -E 's/_v[0-9]{14}$//')
+          # Match metadata.json key exactly (including version suffix if present)
+          meta_key="$base_name"
 
           # Delete old APK if exists
           old_apk_key=$(jq -r --arg base "$base_name" '.[] | select(.name | startswith($base + "_v")) | .apk_url' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
