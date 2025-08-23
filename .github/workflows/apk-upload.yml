@@ -72,7 +72,7 @@ jobs:
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
           # Strip GitHub action version suffix to match metadata.json key
-          meta_key=$(echo "$base_name" | sed -E 's/(_v[0-9]+)+$//')
+         meta_key=$(echo "$base_name" | sed -E 's/_v[0-9]+$//')
 
           # Delete old APK if exists
           old_apk_key=$(jq -r --arg base "$base_name" '.[] | select(.name | startswith($base + "_v")) | .apk_url' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
