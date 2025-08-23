@@ -66,18 +66,19 @@ jobs:
           [ -f "$apk" ] || continue
           base_name=$(basename "$apk" .apk)
 
-          # Generate incremental version (v1, v2, v3...)
-          existing_count=$(jq '[.[] | select(.name | startswith("'"$base_name"'"))] | length' meta_data/apps.json)
+          # Count existing versions before deleting
+          existing_count=$(jq '[.[] | select(.name | test("'"$base_name"'_v[0-9]+$"))] | length' meta_data/apps.json)
           version=$((existing_count + 1))
           new_apk_name="${base_name}_v${version}.apk"
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          # Metadata key matches base_name
           meta_key="$base_name"
 
-          # Delete old APK if exists
-          old_apk_key=$(jq -r --arg base "$base_name" '.[] | select(.name | startswith($base + "_v")) | .apk_url' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
+          # Delete only the latest old APK if exists
+          old_apk_key=$(jq -r --arg base "$base_name" \
+            '[.[] | select(.name | test($base + "_v[0-9]+$"))] | last | .apk_url' meta_data/apps.json \
+            | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
           if [ -n "$old_apk_key" ]; then
             echo "Deleting old APK from S3: $old_apk_key"
             aws s3 rm "s3://${{ secrets.S3_BUCKET_NAME }}/$old_apk_key" || true
@@ -90,18 +91,15 @@ jobs:
           # Get changelog
           changelog=$(jq -r --arg name "$meta_key" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
 
-          # Get description & icon from metadata.json
+          # Get description & icon
           description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file")
           icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // ""' "$metadata_file")
-
-          # Form icon URL if exists
+          icon_url=""
           if [ -n "$icon_path" ] && [ "$icon_path" != "null" ]; then
             icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
-          else
-            icon_url=""
           fi
 
-          # Remove old entry from apps.json
+          # Remove old entries if needed
           updated_apps=$(jq --arg base "$base_name" 'map(select(.name | startswith($base + "_v") | not))' meta_data/apps.json)
 
           # Create new entry
@@ -114,7 +112,6 @@ jobs:
             --arg description "$description" \
             '{name: $name, version: $version, apk_url: $apk_url, changelog: $changelog, icon_url: $icon_url, description: $description}')
 
-          # Add new entry
           echo "$updated_apps" | jq --argjson new "$new_entry" '. + [$new]' > meta_data/apps.json
         done
 
