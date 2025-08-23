@@ -56,7 +56,7 @@ jobs:
           base_name=$(basename "$apk" .apk)
 
           # Remove any version suffix from base_name for metadata lookup
-          meta_key=$(echo "$base_name" | sed -E 's/_v[0-9]+$//; s/-[0-9]+\.[0-9]+\.[0-9]+$//')
+          meta_key="$base_name"
 
           # Use timestamp as version
           version=$(date +%Y%m%d%H%M%S)
