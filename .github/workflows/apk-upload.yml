@@ -76,8 +76,10 @@ jobs:
 
           # base without .apk
           raw_base=$(basename "$apk" .apk)
-          # trim and remove any spaces (handles '...-0.1.0 .apk' and '0.2. 0.apk')
-          clean_base=$(echo "$raw_base" | xargs | tr -d '[:space:]')
+          # trim and remove spaces
+          temp_base=$(echo "$raw_base" | xargs | tr -d '[:space:]')
+          # strip any trailing _v<digits> so we don't double-append
+          clean_base=$(echo "$temp_base" | sed -E 's/_v[0-9]+$//')
 
           # Key we use for metadata lookup
           meta_key="$clean_base"
