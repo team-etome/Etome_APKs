@@ -31,11 +31,20 @@ jobs:
 
     - name: Download or create apps.json
       run: |
-        aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json meta_data/apps.json || echo "[]" > meta_data/apps.json
+        aws s3 cp "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json" meta_data/apps.json || echo "[]" > meta_data/apps.json
 
-    - name: Download metadata.json from S3
+    # IMPORTANT: prefer the repo metadata.json you commit; only fall back to S3; else {}
+    - name: Load metadata.json (prefer repo copy)
       run: |
-        aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/meta/metadata.json metadata.json || echo "{}" > metadata.json
+        if [ -f metadata.json ]; then
+          echo "Using metadata.json from repo"
+        elif aws s3 cp "s3://${{ secrets.S3_BUCKET_NAME }}/meta/metadata.json" metadata.json; then
+          echo "Downloaded metadata.json from S3"
+        else
+          echo "{}" > metadata.json
+          echo "No metadata.json found; created empty"
+        fi
+        cat metadata.json
 
     - name: Upload all icons to S3
       run: |
@@ -48,50 +57,60 @@ jobs:
 
     - name: Upload new APKs and update apps.json
       run: |
-        changed_apks=$(git diff --diff-filter=AM --name-only ${{ github.event.before }} ${{ github.sha }} -- '*.apk')
+        set -euo pipefail
+
+        # Find changed APKs in this push; if empty (e.g., manual rerun), fall back to all *.apk
+        changed_apks=$(git diff --diff-filter=AM --name-only ${{ github.event.before }} ${{ github.sha }} -- '*.apk' || true)
+        if [ -z "${changed_apks}" ]; then
+          changed_apks=$(ls -1 *.apk 2>/dev/null || true)
+        fi
+
+        apps_file="meta_data/apps.json"
         metadata_file="metadata.json"
+
+        # Always ensure apps_file exists
+        [ -f "$apps_file" ] || echo "[]" > "$apps_file"
 
         for apk in $changed_apks; do
           [ -f "$apk" ] || continue
-          base_name=$(basename "$apk" .apk)
 
-          # Remove any version suffix from base_name for metadata lookup
-          meta_key="$base_name"
+          # base without .apk
+          raw_base=$(basename "$apk" .apk)
+          # trim and remove any spaces (handles '...-0.1.0 .apk' and '0.2. 0.apk')
+          clean_base=$(echo "$raw_base" | xargs | tr -d '[:space:]')
+
+          # Key we use for metadata lookup
+          meta_key="$clean_base"
 
           # Use timestamp as version
           version=$(date +%Y%m%d%H%M%S)
-          new_apk_name="${base_name}_v${version}.apk"
+          new_apk_name="${clean_base}_v${version}.apk"
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          # Delete previous APK(s) for same base_name if needed
-          old_apk_keys=$(jq -r --arg base "$base_name" '[.[] | select(.name | startswith($base + "_v")) | .apk_url] | .[]' meta_data/apps.json | sed -n 's|.*amazonaws.com/\(.*\)|\1|p')
+          # Delete previous APK(s) for same clean_base (older versions)
+          old_apk_keys=$(jq -r --arg base "$clean_base" '[.[] | select(.name | startswith($base + "_v")) | .apk_url] | .[]' "$apps_file" 2>/dev/null | sed -n 's|.*amazonaws.com/\(.*\)|\1|p' || true)
           for old_key in $old_apk_keys; do
             echo "Deleting old APK from S3: $old_key"
             aws s3 rm "s3://${{ secrets.S3_BUCKET_NAME }}/$old_key" || true
           done
 
-          # Upload new APK
           echo "Uploading new APK: $apk_s3_key"
           aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/$apk_s3_key"
 
-          # Get changelog
+          # Get changelog, description, icon path
           changelog=$(jq -r --arg name "$meta_key" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
+          description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file" 2>/dev/null || echo "No description.")
+          icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // "icons/default.png"' "$metadata_file" 2>/dev/null || echo "icons/default.png")
 
-          # Get description & icon robustly
-          description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file")
-          icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // ""' "$metadata_file")
-          icon_url=""
-          if [ -n "$icon_path" ] && [ "$icon_path" != "null" ]; then
-            icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/$icon_path"
-          fi
+          # Always build icon_url (never empty)
+          icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${icon_path}"
 
-          # Remove old entries with same base_name
-          updated_apps=$(jq --arg base "$base_name" 'map(select(.name | startswith($base + "_v") | not))' meta_data/apps.json)
+          # Remove old entries of same app from apps.json and add the new one
+          updated_apps=$(jq --arg base "$clean_base" '[.[] | select(.name | startswith($base + "_v") | not)]' "$apps_file")
 
-          # Add new entry
           new_entry=$(jq -n \
-            --arg name "${base_name}_v${version}" \
+            --arg name "${clean_base}_v${version}" \
             --arg version "$version" \
             --arg apk_url "$apk_url" \
             --arg changelog "$changelog" \
@@ -99,10 +118,10 @@ jobs:
             --arg description "$description" \
             '{name: $name, version: $version, apk_url: $apk_url, changelog: $changelog, icon_url: $icon_url, description: $description}')
 
-          echo "$updated_apps" | jq --argjson new "$new_entry" '. + [$new]' > meta_data/apps.json
+          echo "$updated_apps" | jq --argjson new "$new_entry" '. + [$new]' > "$apps_file"
         done
 
         echo "Final apps.json:"
-        cat meta_data/apps.json
+        cat "$apps_file"
 
-        aws s3 cp meta_data/apps.json s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json
+        aws s3 cp "$apps_file" "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json"
