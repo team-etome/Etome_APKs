@@ -83,7 +83,7 @@ jobs:
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          old_apk_keys=$(jq -r --arg base "$clean_base" '[.[] | select(.package_name | startswith($base + "_v")) | .apk_url] | .[]' "$apps_file" 2>/dev/null | sed -n 's|.*amazonaws.com/\(.*\)|\1|p' || true)
+          old_apk_keys=$(jq -r --arg base "$clean_base" '[.[] | select(.package_name and (.package_name | startswith($base + "_v"))) | .apk_url] | .[]' "$apps_file" 2>/dev/null | sed -n 's|.*amazonaws.com/\(.*\)|\1|p' || true)
           for old_key in $old_apk_keys; do
             echo "Deleting old APK from S3: $old_key"
             aws s3 rm "s3://${{ secrets.S3_BUCKET_NAME }}/$old_key" || true
