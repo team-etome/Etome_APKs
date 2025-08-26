@@ -33,7 +33,7 @@ jobs:
       run: |
         aws s3 cp "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json" meta_data/apps.json || echo "[]" > meta_data/apps.json
 
-    # IMPORTANT: prefer the repo metadata.json you commit; only fall back to S3; else {}
+    # Prefer repo metadata.json; fallback to S3; else {}
     - name: Load metadata.json (prefer repo copy)
       run: |
         if [ -f metadata.json ]; then
@@ -59,7 +59,6 @@ jobs:
       run: |
         set -euo pipefail
 
-        # Find changed APKs in this push; if empty (e.g., manual rerun), fall back to all *.apk
         changed_apks=$(git diff --diff-filter=AM --name-only ${{ github.event.before }} ${{ github.sha }} -- '*.apk' || true)
         if [ -z "${changed_apks}" ]; then
           changed_apks=$(ls -1 *.apk 2>/dev/null || true)
@@ -68,30 +67,23 @@ jobs:
         apps_file="meta_data/apps.json"
         metadata_file="metadata.json"
 
-        # Always ensure apps_file exists
         [ -f "$apps_file" ] || echo "[]" > "$apps_file"
 
         for apk in $changed_apks; do
           [ -f "$apk" ] || continue
 
-          # base without .apk
           raw_base=$(basename "$apk" .apk)
-          # trim and remove spaces
           temp_base=$(echo "$raw_base" | xargs | tr -d '[:space:]')
-          # strip any trailing _v<digits> so we don't double-append
           clean_base=$(echo "$temp_base" | sed -E 's/_v[0-9]+$//')
 
-          # Key we use for metadata lookup
           meta_key="$clean_base"
 
-          # Use timestamp as version
           version=$(date +%Y%m%d%H%M%S)
           new_apk_name="${clean_base}_v${version}.apk"
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          # Delete previous APK(s) for same clean_base (older versions)
-          old_apk_keys=$(jq -r --arg base "$clean_base" '[.[] | select(.name | startswith($base + "_v")) | .apk_url] | .[]' "$apps_file" 2>/dev/null | sed -n 's|.*amazonaws.com/\(.*\)|\1|p' || true)
+          old_apk_keys=$(jq -r --arg base "$clean_base" '[.[] | select(.package_name | startswith($base + "_v")) | .apk_url] | .[]' "$apps_file" 2>/dev/null | sed -n 's|.*amazonaws.com/\(.*\)|\1|p' || true)
           for old_key in $old_apk_keys; do
             echo "Deleting old APK from S3: $old_key"
             aws s3 rm "s3://${{ secrets.S3_BUCKET_NAME }}/$old_key" || true
@@ -100,25 +92,24 @@ jobs:
           echo "Uploading new APK: $apk_s3_key"
           aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/$apk_s3_key"
 
-          # Get changelog, description, icon path
           changelog=$(jq -r --arg name "$meta_key" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
           description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file" 2>/dev/null || echo "No description.")
           icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // "icons/default.png"' "$metadata_file" 2>/dev/null || echo "icons/default.png")
+          display_name=$(jq -r --arg key "$meta_key" '.[$key].display_name // $key' "$metadata_file" 2>/dev/null)
 
-          # Always build icon_url (never empty)
           icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${icon_path}"
 
-          # Remove old entries of same app from apps.json and add the new one
-          updated_apps=$(jq --arg base "$clean_base" '[.[] | select(.name | startswith($base + "_v") | not)]' "$apps_file")
+          updated_apps=$(jq --arg base "$clean_base" '[.[] | select(.package_name | startswith($base + "_v") | not)]' "$apps_file")
 
           new_entry=$(jq -n \
-            --arg name "${clean_base}_v${version}" \
+            --arg package_name "${clean_base}_v${version}" \
+            --arg name "$display_name" \
             --arg version "$version" \
             --arg apk_url "$apk_url" \
             --arg changelog "$changelog" \
             --arg icon_url "$icon_url" \
             --arg description "$description" \
-            '{name: $name, version: $version, apk_url: $apk_url, changelog: $changelog, icon_url: $icon_url, description: $description}')
+            '{package_name: $package_name, name: $name, version: $version, apk_url: $apk_url, changelog: $changelog, icon_url: $icon_url, description: $description}')
 
           echo "$updated_apps" | jq --argjson new "$new_entry" '. + [$new]' > "$apps_file"
         done
