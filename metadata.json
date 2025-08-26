@@ -1,96 +1,112 @@
 {
   "app1": {
     "description": "Internal app1",
-    "icon": "icons/default.png"
+    "icon": "icons/default.png",
+    "display_name": "App 1"
   },
   "app2": {
     "description": "Internal app2",
-    "icon": "icons/default.png"
+    "icon": "icons/default.png",
+    "display_name": "App 2"
   },
   "app3": {
     "description": "Internal app3",
-    "icon": "icons/default.png"
+    "icon": "icons/default.png",
+    "display_name": "App 3"
   },
-
   "AuroraStore-4.4.2": {
     "description": "AuroraStore 4.4.2 - Improved performance and bug fixes",
-    "icon": "icons/icon.jpg"
+    "icon": "icons/icon.jpg",
+    "display_name": "Aurora Store"
   },
-
   "com.etome.academia-0.4.1": {
     "description": "Learning platform",
-    "icon": "icons/com.etome.academia.png"
+    "icon": "icons/com.etome.academia.png",
+    "display_name": "Etome Academia"
   },
   "com.etome.diary-0.3.0": {
     "description": "Etome Diary 0.3.0 - Personal diary app",
-    "icon": "icons/com.etome.diary.png"
+    "icon": "icons/com.etome.diary.png",
+    "display_name": "Etome Diary"
   },
   "com.etome.eeka_launcher-1.2.7": {
     "description": "Eeka Launcher 1.2.7 - Custom launcher",
-    "icon": "icons/com.etome.eeka_launcher.png"
+    "icon": "icons/com.etome.eeka_launcher.png",
+    "display_name": "Eeka Launcher"
   },
   "com.etome.etome_examination_mcq_omr-0.1.0": {
     "description": "Etome Examination MCQ OMR 0.1.0",
-    "icon": "icons/com.etome.etome_examination_mcq_omr.png"
+    "icon": "icons/com.etome.etome_examination_mcq_omr.png",
+    "display_name": "Etome Examination MCQ OMR"
   },
   "com.etome.etomeandroid_academia-0.4.1": {
     "description": "Etome Android Academia 0.4.1",
-    "icon": "icons/com.etome.academia.png"
+    "icon": "icons/com.etome.academia.png",
+    "display_name": "Etome Android Academia"
   },
   "com.etome.etomeloka-1.0.2": {
     "description": "Etome Loka 1.0.2 - Community platform",
-    "icon": "icons/com.etome.etomeloka.png"
+    "icon": "icons/com.etome.etomeloka.png",
+    "display_name": "Etome Loka"
   },
   "com.etome.etometodo-1.0.2": {
     "description": "Etome Todo 1.0.2 - Task manager",
-    "icon": "icons/com.etome.etometodo.png"
+    "icon": "icons/com.etome.etometodo.png",
+    "display_name": "Etome Todo"
   },
   "com.etome.evaluation-1.4.3": {
     "description": "Etome Evaluation 1.4.3",
-    "icon": "icons/com.etome.evaluation.png"
+    "icon": "icons/com.etome.evaluation.png",
+    "display_name": "Etome Evaluation"
   },
   "com.etome.examination-1.7.2": {
     "description": "Etome Examination 1.7.2",
-    "icon": "icons/com.etome.examination.png"
+    "icon": "icons/com.etome.examination.png",
+    "display_name": "Etome Examination"
   },
   "com.etome.eyora-0.1.5": {
     "description": "Eyora 0.1.5",
-    "icon": "icons/com.etome.eyora.png"
+    "icon": "icons/com.etome.eyora.png",
+    "display_name": "Eyora"
   },
   "com.etome.invigilation-1.0.5": {
     "description": "Etome Invigilation 1.0.5",
-    "icon": "icons/com.etome.invigilation.png"
+    "icon": "icons/com.etome.invigilation.png",
+    "display_name": "Etome Invigilation"
   },
   "com.etome.loka-1.4.0": {
     "description": "Etome Loka 1.4.0",
-    "icon": "icons/com.etome.loka.png"
+    "icon": "icons/com.etome.loka.png",
+    "display_name": "Etome Loka"
   },
   "com.etome.nirmana-1.6.1": {
     "description": "Etome Nirmana 1.6.1",
-    "icon": "icons/com.etome.nirmana.png"
+    "icon": "icons/com.etome.nirmana.png",
+    "display_name": "Etome Nirmana"
   },
   "com.etome.panasonic_deloitte-0.1.2": {
     "description": "Panasonic Deloitte 0.1.2",
-    "icon": "icons/com.etome.care_demo.png"
+    "icon": "icons/com.etome.care_demo.png",
+    "display_name": "Panasonic Deloitte"
   },
-
   "com.etomi.etomediary-1.0.4": {
     "description": "Etome Diary (Alt) 1.0.4",
-    "icon": "icons/com.etomi.etomediary.png"
+    "icon": "icons/com.etomi.etomediary.png",
+    "display_name": "Etome Diary (Alt)"
   },
-
   "com.leywin.rsbr-1.0.0": {
     "description": "Leywin RSBR 1.0.0",
-    "icon": "icons/com.leywin.rsbr.png"
+    "icon": "icons/com.leywin.rsbr.png",
+    "display_name": "Leywin RSBR"
   },
   "com.leywin.storeley-2.2.3": {
     "description": "Storeley 2.2.3",
-    "icon": "icons/com.leywin.storeley.png"
+    "icon": "icons/com.leywin.storeley.png",
+    "display_name": "Storeley"
   },
   "com.leywin.tester.etome_store_tester-0.2.0": {
     "description": "Etome Store Tester 0.2.0",
-    "icon": "icons/com.leywin.tester.etome_store_tester.png"
+    "icon": "icons/com.leywin.tester.etome_store_tester.png",
+    "display_name": "leywin_tester_Etome"
   }
 }
-
-
