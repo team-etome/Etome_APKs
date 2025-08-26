@@ -100,7 +100,7 @@ jobs:
 
           icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${icon_path}"
 
-          updated_apps=$(jq --arg base "$clean_base" '[.[] | select(.package_name | startswith($base + "_v") | not)]' "$apps_file")
+          updated_apps=$(jq --arg base "$clean_base" '[.[] | select(.package_name and (.package_name | startswith($base + "_v") | not))]' "$apps_file")
 
           new_entry=$(jq -n \
             --arg package_name "${clean_base}_v${version}" \
