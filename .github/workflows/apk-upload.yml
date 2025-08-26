@@ -95,7 +95,8 @@ jobs:
           changelog=$(jq -r --arg name "$meta_key" '.[$name] // "No changelog available."' changelog.json 2>/dev/null || echo "No changelog available.")
           description=$(jq -r --arg key "$meta_key" '.[$key].description // "No description."' "$metadata_file" 2>/dev/null || echo "No description.")
           icon_path=$(jq -r --arg key "$meta_key" '.[$key].icon // "icons/default.png"' "$metadata_file" 2>/dev/null || echo "icons/default.png")
-          display_name=$(jq -r --arg key "$meta_key" '.[$key].display_name // $key' "$metadata_file" 2>/dev/null)
+          display_name=$(jq -r --arg key "$meta_key" '.[$key].name // $key' "$metadata_file" 2>/dev/null)
+
 
           icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${icon_path}"
 
