@@ -1,136 +1,98 @@
-name: Upload New APKs to S3 and Update apps.json
+name: Build and Upload APKs
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "*.apk"
-      - "apk_mapping.json"
-      - "changelog.json"
       - "metadata.json"
+      - "changelog.json"
       - "icons/**"
 
 jobs:
-  upload:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Ensure jq is available
-      run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Prepare apps.json
+        run: |
+          set -euo pipefail
+          echo "[]" > apps.json
 
-    - name: Create temp folders
-      run: mkdir -p meta_data
+          # loop through all APKs in repo
+          for apk in *.apk; do
+            base=$(basename "$apk" .apk)
 
-    - name: Download or create apps.json
-      run: |
-        aws s3 cp "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json" meta_data/apps.json || echo "[]" > meta_data/apps.json
+            # split name and version (last dash separated field = version)
+            pkg_name=$(echo "$base" | awk -F'-' '{NF--; print $0}' OFS="-")
+            version=$(echo "$base" | awk -F'-' '{print $NF}')
 
-    # Prefer repo metadata.json; fallback to S3; else {}
-    - name: Load metadata.json (prefer repo copy)
-      run: |
-        if [ -f metadata.json ]; then
-          echo "Using metadata.json from repo"
-        elif aws s3 cp "s3://${{ secrets.S3_BUCKET_NAME }}/meta/metadata.json" metadata.json; then
-          echo "Downloaded metadata.json from S3"
-        else
-          echo "{}" > metadata.json
-          echo "No metadata.json found; created empty"
-        fi
-        cat metadata.json
+            # timestamp suffix for uniqueness in S3
+            timestamp=$(date +%Y%m%d%H%M%S)
+            new_apk_name="${pkg_name}-${version}_v${timestamp}.apk"
+            apk_s3_key="apks/${new_apk_name}"
 
-    - name: Upload all icons to S3
-      run: |
-        if [ -d icons ]; then
-          echo "Uploading icons to S3..."
-          aws s3 cp icons/ "s3://${{ secrets.S3_BUCKET_NAME }}/icons/" --recursive
-        else
-          echo "No icons folder found, skipping."
-        fi
+            # upload apk to S3
+            aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/${apk_s3_key}"
 
-    - name: Upload new APKs and update apps.json
-      shell: bash
-      run: |
-        set -euo pipefail
+            # construct apk_url
+            apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-        # Determine which APKs changed in this push; fallback to all *.apk if diff not available
-        changed_apks=$(git diff --diff-filter=AM --name-only ${{ github.event.before }} ${{ github.sha }} -- '*.apk' || true)
-        if [ -z "${changed_apks}" ]; then
-          changed_apks=$(ls -1 *.apk 2>/dev/null || true)
-        fi
+            # read metadata and changelog
+            changelog=$(jq -r --arg pkg "$pkg_name" '.[$pkg].changelog // "Bug fixes and performance improvements."' changelog.json)
+            description=$(jq -r --arg pkg "$pkg_name" '.[$pkg].description // "No description provided."' metadata.json)
+            app_name=$(jq -r --arg pkg "$pkg_name" '.[$pkg].name // $pkg' metadata.json)
 
-        apps_file="meta_data/apps.json"
-        metadata_file="metadata.json"
+            # icon (must exist in icons/ directory, uploaded to S3)
+            icon_file="icons/${app_name}.png"
+            if [ -f "$icon_file" ]; then
+              aws s3 cp "$icon_file" "s3://${{ secrets.S3_BUCKET_NAME }}/icons/${app_name}.png"
+            fi
+            icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/icons/${app_name}.png"
 
-        [ -f "$apps_file" ] || echo "[]" > "$apps_file"
+            # new entry JSON
+            entry=$(jq -n \
+              --arg package_name "${pkg_name}-${version}" \
+              --arg name "$app_name" \
+              --arg version "$version" \
+              --arg apk_url "$apk_url" \
+              --arg changelog "$changelog" \
+              --arg icon_url "$icon_url" \
+              --arg description "$description" \
+              '{
+                package_name: $package_name,
+                name: $name,
+                version: $version,
+                apk_url: $apk_url,
+                changelog: $changelog,
+                icon_url: $icon_url,
+                description: $description
+              }')
 
-        for apk in $changed_apks; do
-          [ -f "$apk" ] || continue
+            # add to apps.json (temporary append list)
+            tmp=$(mktemp)
+            jq ". + [$entry]" apps.json > "$tmp" && mv "$tmp" apps.json
+          done
 
-          raw_base=$(basename "$apk" .apk)
-          # Strip spaces and any existing timestamp suffix like _vYYYYMMDDHHMMSS
-          temp_base=$(echo "$raw_base" | xargs | tr -d '[:space:]')
-          clean_base=$(echo "$temp_base" | sed -E 's/_v[0-9]{14}$//')
+          # ensure only latest version per package_name (by highest version)
+          tmp=$(mktemp)
+          jq -s '
+            add
+            | group_by(.name)
+            | map(max_by(.version))
+          ' apps.json > "$tmp" && mv "$tmp" apps.json
 
-          # Extract semantic version (text after last dash)
-          version=$(echo "$clean_base" | awk -F'-' '{print $NF}')
-          # Package root (everything before the last dash + version)
-          package_root="${clean_base%-${version}}"
-          # Guard: if version parse failed (no dash in name), skip file
-          if [ -z "$version" ] || [ "$version" = "$clean_base" ]; then
-            echo "⚠️  Could not parse semantic version from $raw_base; expected pattern <package>-<version>. Skipping."
-            continue
-          fi
-
-          # Keep APKs unique in S3 with a timestamped suffix, but DO NOT show timestamp in output JSON
-          timestamp=$(date +%Y%m%d%H%M%S)
-          new_apk_name="${package_root}-${version}_v${timestamp}.apk"
-          apk_s3_key="apks/${new_apk_name}"
-          apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
-
-          echo "Uploading APK to S3: $apk_s3_key"
-          aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/${apk_s3_key}"
-
-          # Lookup friendly metadata (by package_root)
-          display_name=$(jq -r --arg key "$package_root" '.[$key].name // $key' "$metadata_file" 2>/dev/null || echo "$package_root")
-          description=$(jq -r --arg key "$package_root" '.[$key].description // "No description."' "$metadata_file" 2>/dev/null || echo "No description.")
-          icon_path=$(jq -r --arg key "$package_root" '.[$key].icon // "icons/default.png"' "$metadata_file" 2>/dev/null || echo "icons/default.png")
-          icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${icon_path}"
-
-          # Changelog: try key with version first, then package_root fallback
-          if [ -f changelog.json ]; then
-            changelog=$(jq -r --arg k1 "${package_root}-${version}" --arg k2 "$package_root" '(.[$k1] // .[$k2] // "No changelog available.")' changelog.json 2>/dev/null || echo "No changelog available.")
-          else
-            changelog="No changelog available."
-          fi
-
-          # Remove old entries for this package (anything whose package_name starts with "package_root-")
-          updated_apps=$(jq --arg prefix "${package_root}-" '[.[] | select(.package_name | startswith($prefix) | not)]' "$apps_file")
-
-          # New entry with semantic version only (no timestamp)
-          new_entry=$(jq -n \
-            --arg package_name "${package_root}-${version}" \
-            --arg name "$display_name" \
-            --arg version "$version" \
-            --arg apk_url "$apk_url" \
-            --arg changelog "$changelog" \
-            --arg icon_url "$icon_url" \
-            --arg description "$description" \
-            '{package_name: $package_name, name: $name, version: $version, apk_url: $apk_url, changelog: $changelog, icon_url: $icon_url, description: $description}')
-
-          echo "$updated_apps" | jq --argjson new "$new_entry" '. + [$new]' > "$apps_file"
-        done
-
-        echo "Final apps.json:" && cat "$apps_file"
-
-        aws s3 cp "$apps_file" "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json"
+      - name: Upload apps.json to S3
+        run: |
+          aws s3 cp apps.json "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json" --content-type "application/json"
