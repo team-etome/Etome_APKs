@@ -50,7 +50,7 @@ jobs:
             apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
             # read metadata and changelog
-            changelog=$(jq -r --arg pkg "$pkg_name" '.[$pkg].changelog // "Bug fixes and performance improvements."' changelog.json)
+            changelog=$(jq -r --arg apk "$apk_name" '.[$apk] // empty' changelog.json)
             description=$(jq -r --arg pkg "$pkg_name" '.[$pkg].description // "No description provided."' metadata.json)
             app_name=$(jq -r --arg pkg "$pkg_name" '.[$pkg].name // $pkg' metadata.json)
 
