@@ -1,28 +1,14 @@
 {
-  "app1": "Initial release of Internal app1",
-  "app2": "Initial release of Internal app2",
-  "app3": "Initial release of Internal app3",
-
-  "AuroraStore-4.4.2": "AuroraStore 4.4.2 - Performance improvements and bug fixes",
-
-  "com.etome.academia-0.4.1": "Added new learning modules and bug fixes",
-  "com.etome.diary-0.3.0": "First stable release of Etome Diary",
-  "com.etome.eeka_launcher-1.2.7": "Improved launcher stability and customization options",
-  "com.etome.etome_examination_mcq_omr-0.1.0": "Initial OMR examination support",
-  "com.etome.etomeandroid_academia-0.4.1": "Same features as Academia 0.4.1, optimized for Android",
-  "com.etome.etomeloka-1.0.2": "Bug fixes and performance updates",
-  "com.etome.etometodo-1.0.2": "Minor UI improvements",
-  "com.etome.evaluation-1.4.3": "Evaluation app improvements and bug fixes",
-  "com.etome.examination-1.7.2": "Examination app stability improvements",
-  "com.etome.eyora-0.1.5": "Early beta release of Eyora",
-  "com.etome.invigilation-1.0.5": "Invigilation app improvements",
-  "com.etome.loka-1.4.0": "New community features and fixes",
-  "com.etome.nirmana-1.6.1": "UI refinements in Nirmana",
-  "com.etome.panasonic_deloitte-0.1.2": "Panasonic Deloitte integration improvements",
-
-  "com.etomi.etomediary-1.0.4": "Alternative diary app with new editor",
-
-  "com.leywin.rsbr-1.0.0": "First release of Leywin RSBR",
-  "com.leywin.storeley-2.2.3": "Storeley updates and bug fixes",
-  "com.leywin.tester.etome_store_tester-0.2.0": "Etome Store Tester improvements"
+  "com.etome.etomeloka": "Bug fixes and performance improvements.",
+  "com.etomi.etomediary": "Bug fixes and performance improvements.",
+  "com.etome.etometodo": "Bug fixes and performance improvements.",
+  "com.leywin.storeley": "Bug fixes and performance improvements.",
+  "com.etome.nirmana": "Bug fixes and performance improvements.",
+  "com.etome.loka": "Bug fixes and performance improvements.",
+  "com.etome.invigilation": "Bug fixes and performance improvements.",
+  "com.etome.eyora": "Bug fixes and performance improvements.",
+  "com.etome.examination": "Bug fixes and performance improvements.",
+  "com.etome.evaluation": "Bug fixes and performance improvements.",
+  "com.etome.eeka_launcher": "Bug fixes and performance improvements.",
+  "com.etome.academia": "Bug fixes and performance improvements."
 }
