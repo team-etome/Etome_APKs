@@ -34,12 +34,9 @@ jobs:
 
     - name: Download or create apps.json (we'll overwrite for a fresh build)
       run: |
-        # We still download the previous file for debugging/history if you want,
-        # but we'll create a fresh meta_data/apps.json (rebuild from repo APKs).
         aws s3 cp "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json" meta_data/apps.json || true
         echo "[]" > meta_data/apps.json
 
-    # Prefer repo metadata.json; fallback to S3; else {}
     - name: Load metadata.json (prefer repo copy)
       run: |
         if [ -f metadata.json ]; then
@@ -86,39 +83,35 @@ jobs:
           [ -f "$apk" ] || continue
 
           raw_base=$(basename "$apk" .apk)
-          # Strip spaces and any existing timestamp suffix like _vYYYYMMDDHHMMSS
           temp_base=$(echo "$raw_base" | xargs | tr -d '[:space:]')
           clean_base=$(echo "$temp_base" | sed -E 's/_v[0-9]{14}$//')
 
-          # Extract semantic version (text after last dash)
           version=$(echo "$clean_base" | awk -F'-' '{print $NF}')
-          # Package root (everything before the last dash + version)
           package_root="${clean_base%-${version}}"
 
-          # Guard: if version parse failed (no dash in name), skip file
           if [ -z "$version" ] || [ "$version" = "$clean_base" ]; then
             echo "⚠️  Could not parse semantic version from $raw_base; expected pattern <package>-<version>. Skipping."
             continue
           fi
 
-          # Keep APKs unique in S3 with a timestamped suffix; do NOT delete old S3 objects
-          timestamp=$(date +%Y%m%d%H%M%S)
-          new_apk_name="${package_root}-${version}_v${timestamp}.apk"
+          # ===== CHANGE 1: Remove timestamp from APK name =====
+          new_apk_name="${package_root}-${version}.apk"
           apk_s3_key="apks/${new_apk_name}"
           apk_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${apk_s3_key}"
 
-          echo "Uploading APK to S3: $apk_s3_key"
-          aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/${apk_s3_key}"
+          # ===== CHANGE 2: Only upload if not already in S3 =====
+          if ! aws s3 ls "s3://${{ secrets.S3_BUCKET_NAME }}/${apk_s3_key}" >/dev/null 2>&1; then
+              echo "Uploading APK to S3: $apk_s3_key"
+              aws s3 cp "$apk" "s3://${{ secrets.S3_BUCKET_NAME }}/${apk_s3_key}"
+          else
+              echo "APK already exists in S3, skipping: $apk_s3_key"
+          fi
 
-          # Lookup friendly metadata (by package_root) from metadata.json (repo-preferred)
           display_name=$(jq -r --arg key "$package_root" '.[$key].name // $key' "$metadata_file" 2>/dev/null || echo "$package_root")
           description=$(jq -r --arg key "$package_root" '.[$key].description // "No description."' "$metadata_file" 2>/dev/null || echo "No description.")
           icon_path=$(jq -r --arg key "$package_root" '.[$key].icon // "icons/default.png"' "$metadata_file" 2>/dev/null || echo "icons/default.png")
           icon_url="https://${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${icon_path}"
 
-          # Changelog: support both formats:
-          # 1) simple string: { "com.foo": "text" }
-          # 2) object:     { "com.foo-1.0.0": { "changelog": "text" } } or { "com.foo": {"changelog":"..." } }
           if [ -f changelog.json ]; then
             changelog=$(jq -r --arg k1 "${package_root}-${version}" --arg k2 "$package_root" '
               ((.[$k1] // .[$k2]) as $v
@@ -132,10 +125,8 @@ jobs:
             changelog="No changelog available."
           fi
 
-          # Remove any previously-added entry for this package in our fresh apps.json
           updated_apps=$(jq --arg prefix "${package_root}-" '[.[] | select((.package_name // "") | startswith($prefix) | not)]' "$apps_file")
 
-          # Create new JSON entry (package_name uses semantic version, no timestamp)
           new_entry=$(jq -n \
             --arg package_name "${package_root}-${version}" \
             --arg name "$display_name" \
@@ -146,12 +137,10 @@ jobs:
             --arg description "$description" \
             '{package_name: $package_name, name: $name, version: $version, apk_url: $apk_url, changelog: $changelog, icon_url: $icon_url, description: $description}')
 
-          # Append the new (latest) entry
           echo "$updated_apps" | jq --argjson new "$new_entry" '. + [$new]' > "$apps_file"
         done
 
         echo "Final apps.json:"
         cat "$apps_file"
 
-        # Upload the rebuilt apps.json to S3 (overwrites meta/apps.json)
         aws s3 cp "$apps_file" "s3://${{ secrets.S3_BUCKET_NAME }}/meta/apps.json" --content-type "application/json"
