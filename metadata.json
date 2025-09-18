@@ -52,12 +52,22 @@
   "com.etome.eeka_launcher": {
     "description": "Discover a simple, fast, and user-friendly app designed to make your everyday tasks easier. With a clean interface and powerful features, this app helps you stay organized, connected, and productive. Whether you’re managing work, learning, or entertainment, everything you need is just a tap away.",
     "icon": "icons/default.png",
-    "name": "Launcher"
+    "name": "Launcher Eka"
+  },
+  "com.etome.eekalauncher": {
+    "description": "Discover a simple, fast, and user-friendly app designed to make your everyday tasks easier. With a clean interface and powerful features, this app helps you stay organized, connected, and productive. Whether you’re managing work, learning, or entertainment, everything you need is just a tap away.",
+    "icon": "icons/default.png",
+    "name": "Launcher Duo"
   },
   "com.etome.academia": {
     "description": "Discover a simple, fast, and user-friendly app designed to make your everyday tasks easier. With a clean interface and powerful features, this app helps you stay organized, connected, and productive. Whether you’re managing work, learning, or entertainment, everything you need is just a tap away.",
     "icon": "icons/Academia.png",
     "name": "Academia"
+  },
+  "com.etome.updater": {
+    "description": "Discover a simple, fast, and user-friendly app designed to make your everyday tasks easier. With a clean interface and powerful features, this app helps you stay organized, connected, and productive. Whether you’re managing work, learning, or entertainment, everything you need is just a tap away.",
+    "icon": "icons/Updater.png",
+    "name": "Updater"
   }
 }
 
