@@ -1,4 +1,9 @@
 {
+"com.etome.praxam.praxam": {
+  "description": "Discover a simple, fast, and user-friendly app designed to make your everyday tasks easier. With a clean interface and powerful features, this app helps you stay organized, connected, and productive. Whether you’re managing work, learning, or entertainment, everything you need is just a tap away.",
+  "icon": "icons/praxam_logo.png",
+  "name": "PraXam Demo"
+},
   "com.etome.etomeloka": {
     "description": "Discover a simple, fast, and user-friendly app designed to make your everyday tasks easier. With a clean interface and powerful features, this app helps you stay organized, connected, and productive. Whether you’re managing work, learning, or entertainment, everything you need is just a tap away.",
     "icon": "icons/LokaPlus.png",
